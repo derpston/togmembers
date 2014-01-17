@@ -1,0 +1,17 @@
+# Leave this off and configure it in one of the other configs, like dev.yaml.
+DEBUG: false
+
+# Used for securing client-side session cookies.
+# Changing this will log everyone out.
+SECRET_KEY: "foo"
+
+# LDAP configuration.
+LDAP_TLS_ENABLED:    False
+LDAP_HOST:           localhost
+LDAP_PORT:           389
+LDAP_BIND_DN:        uid=nobody,ou=people,O=TOG
+LDAP_BIND_PASSWORD:  
+LDAP_BASE:           O=TOG
+
+
+

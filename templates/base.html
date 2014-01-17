@@ -1,0 +1,23 @@
+<html>
+   <head>
+      <title>{% block title %}{% endblock %}</title>
+   <script type="text/javascript">
+   </script>
+   <style type="text/css">
+   </style>
+   </head>
+   <body>
+      {% block content %}
+      {% endblock %}
+
+      {% if config.DEBUG %}
+      <div class="debug">
+         {{session}}
+         {{request}}
+         {{config}}
+      </div>
+      {% endif %}
+      </div>
+   </body>
+</html>
+
