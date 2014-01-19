@@ -44,14 +44,14 @@ def login_form():
 @app.route("/login/", methods = ["POST"])
 def login_submit():
    form = LoginForm(request.form)
-   if form.validate():
-      print form.username.data
-      print form.password.data
-      if utils.validate_user(form.username.data, form.password.data):
-         session['uid'] = form.username.data
-   #else:
-      #flash("waf")
-   return redirect("/")
+   if form.validate() and utils.validate_user(form.username.data, form.password.data):
+      # Log the user in.
+      session['uid'] = form.username.data
+      return render_template('login_redirect.html')
+   else:
+      flash("Incorrect username and/or password.")
+      return redirect("/login/")
+   
 
 @app.route("/logout/", methods = ["GET"])
 def logout():

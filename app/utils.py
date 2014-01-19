@@ -77,13 +77,18 @@ def validate_user(username, password):
 
    results = ldap_search(uid = username, attrs = ['userPassword'])
 
-   assert len(results) == 1, "Expected only one object to match uid=%s, got %d objects." % (username, len(results))
+   assert len(results) < 2, "Expected only one object to match uid=%s, got %d objects." % (username, len(results))
+
+   if len(results) == 0:
+      return False
 
    result = results.values()[0]
    
-   # TODO: When the remote side supports hashed passwords, we'll have to
-   # update this.
-   return result['userPassword'][0] == password
+   return result['userPassword'][0] == hash_user_password(password)
+
+def hash_user_password(password):
+   # We suck, there's no password hashing yet!
+   return password
 
 def parse_dn(dn):
    """Returns a dict representing all the fields in an LDAP Distinguished Name."""
