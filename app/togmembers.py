@@ -11,7 +11,7 @@ from flask import Flask, request, session, redirect, flash, render_template
 from wtforms import Form, BooleanField, TextField, PasswordField, validators
 import jinja2
 
-app = Flask(settings_loader.APPNAME, template_folder = "../templates/")
+app = Flask(settings_loader.APPNAME, template_folder = "../templates/", static_folder = "../static")
 
 if __name__ == "__main__":
    # Bit of a hack to get this extra path into the settings_loader module
@@ -30,14 +30,19 @@ utils.config = app.config
 def index():
    context = {"message": "feck yis", "debug": app.debug}
    #return template.render(context)
-   return render_template('index.html', **context)
+   return render_template('login.html', **context)
 
 class LoginForm(Form):
    username = TextField('Username', [validators.Length(min = 1, max = 64)])
    password = PasswordField('Password', [validators.Length(min = 0, max = 64)])
 
+@app.route("/login/", methods = ["GET"])
+def login_form():
+   context = {}
+   return render_template('login.html', **context)
+
 @app.route("/login/", methods = ["POST"])
-def login():
+def login_submit():
    form = LoginForm(request.form)
    if form.validate():
       print form.username.data

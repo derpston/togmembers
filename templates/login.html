@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+
+{{message}}
+
+<div class="well">
+   <form class="form-horizontal" action="/login/" method="POST">
+      <fieldset>
+         <legend>Login</legend>
+
+         <div class="form-group">
+            <label for="inputUsername" class="col-lg-2 control-label">Username</label>
+            <div class="col-lg-2">
+               <input type="text" class="form-control" name="username" id="inputUsername" placeholder="Username" />
+            </div>
+         </div>
+
+         <div class="form-group">
+            <label for="inputPassword" class="col-lg-2 control-label">Password</label>
+            <div class="col-lg-10">
+               <input type="password" class="form-control" name="password" id="inputPassword" placeholder="Password" />
+            </div>
+         </div>
+
+         <div class="form-group">
+            <div class="col-lg-10 col-lg-offset-2">
+               <button type="submit" class="btn btn-primary">Login</button>
+            </div>
+         </div>
+
+      </fieldset>
+   </form>
+</div>
+
+<div class="well well-lg">
+   <h1>Forgot password?</h1>
+
+   <p>
+      We haven't built a password reset feature yet, so you'll need to ask someone like schrodinger for help. Sorry!
+   </p>
+</div>
+
+<div class="well well-lg">
+   <h1>Don't have an account?</h1>
+
+   <p>
+      If you don't have an account here yet, you should probably talk to the membership secretary.
+   </p>
+</div>
+
+{% endblock %}
