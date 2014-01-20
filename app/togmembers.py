@@ -28,9 +28,10 @@ utils.config = app.config
 
 @app.route("/")
 def index():
-   context = {"message": "feck yis", "debug": app.debug}
-   #return template.render(context)
-   return render_template('login.html', **context)
+   if 'uid' in session:
+      return redirect("/members/")
+   else:
+      return redirect("/login/")
 
 class LoginForm(Form):
    username = TextField('Username', [validators.Length(min = 1, max = 64)])
@@ -51,13 +52,12 @@ def login_submit():
    else:
       flash("Incorrect username and/or password.")
       return redirect("/login/")
-   
 
 @app.route("/logout/", methods = ["GET"])
 def logout():
    session.clear()
    return redirect("/")
- 
+   
 if __name__ == "__main__":
    app.run()
 
