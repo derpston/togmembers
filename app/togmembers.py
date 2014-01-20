@@ -58,6 +58,11 @@ def logout():
    session.clear()
    return redirect("/")
    
+@app.route("/members/", methods = ["GET"])
+def login_form():
+   context = {}
+   return render_template('members.html', **context)
+
 if __name__ == "__main__":
    app.run()
 
