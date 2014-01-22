@@ -29,7 +29,7 @@ utils.config = app.config
 @app.route("/")
 def index():
    if 'uid' in session:
-      return redirect("/members/")
+      return redirect("/changepassword/")
    else:
       return redirect("/login/")
 
@@ -48,6 +48,7 @@ def login_submit():
    if form.validate() and utils.validate_user(form.username.data, form.password.data):
       # Log the user in.
       session['uid'] = form.username.data
+
       return render_template('login_redirect.html')
    else:
       flash("Incorrect username and/or password.")
@@ -57,11 +58,46 @@ def login_submit():
 def logout():
    session.clear()
    return redirect("/")
-   
-@app.route("/members/", methods = ["GET"])
-def login_form():
+
+#@restrict(lambda uid: len(uid) > 0)
+@app.route("/changepassword/", methods = ["GET"])
+def changepassword():
    context = {}
-   return render_template('members.html', **context)
+   return render_template('changepassword.html', **context)
+
+class ChangePasswordForm(Form):
+   oldpassword = PasswordField('Current password', [
+         validators.Required()
+      ,  validators.Length(min = 0, max = 64)
+      ])
+   newpassword = PasswordField('New password', [
+         validators.Required()
+      ,  validators.Length(min = 0, max = 64)
+      ])
+   newpassword_verify = PasswordField('New password (repeat)', [
+         validators.Required()
+      ,  validators.Length(min = 0, max = 64)
+      ,  validators.EqualTo('newpassword', message='New passwords must match.')
+      ])
+
+@app.route("/changepassword/", methods = ["POST"])
+def changepassword_submit():
+   form = ChangePasswordForm(request.form)
+   if form.validate():
+      if utils.validate_user(session['uid'], form.oldpassword.data):
+         # Change their password. 
+         if utils.change_password(session['uid'], form.oldpassword.data, form.newpassword.data):
+            flash("Password changed!")
+         else:
+            session.clear()
+            flash("No LDAP client object?")
+      else:
+         flash("Old password incorrect.")
+      return redirect("/")
+   else:
+      flash("Password change failed. Please fill in all fields and make sure you type the new password correctly both times.")
+      return redirect("/changepassword/")
+
 
 if __name__ == "__main__":
    app.run()

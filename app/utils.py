@@ -5,12 +5,17 @@ import logging
 # Third party
 import jinja2
 import ldap
+import ldap.modlist
 
 # This will be populated by togmembers.py after the configs have been loaded.
 config = {}
 
 # This will cache an LDAP client object after the first time we need one.
+# XXX Not used anymore, using per-user credentials.
 ldapclient = None
+
+# Holds uid => ldap client objects
+cached_ldap_clients = {}
 
 def page(func):
    @functools.wraps(func)
@@ -24,7 +29,7 @@ def page(func):
       return content
    return wrapper
 
-def get_ldap_client():
+def get_ldap_client(dn, password):
    global ldapclient
    try:
       # Try to return a cached ldapclient object.
@@ -36,12 +41,12 @@ def get_ldap_client():
       protocol = "ldaps" if config['LDAP_TLS_ENABLED'] else "ldap"
       uri = "%s://%s:%d" % (protocol, config['LDAP_HOST'], config['LDAP_PORT'])
       ldapclient = ldap.initialize(uri)
-      ldapclient.bind(config['LDAP_BIND_DN'], config['LDAP_BIND_PASSWORD'])
+      ldapclient.bind(dn, password)#config['LDAP_BIND_DN'], config['LDAP_BIND_PASSWORD'])
 
       return ldapclient
 
-def ldap_search(**kwargs):
-   ldapclient = get_ldap_client()
+def ldap_search(bind_uid, **kwargs):
+   ldapclient = get_uid_ldap_client(bind_uid)
 
    # Pick the attrs argument out, if it exists, because it needs to be
    # passed to search_s separately from filterstr.
@@ -74,8 +79,9 @@ def ldap_search(**kwargs):
 
 def validate_user(username, password):
    """Given a username and password, returns a boolean indicating whether this matches a user."""
+   get_uid_ldap_client(username, password)
 
-   results = ldap_search(uid = username, attrs = ['userPassword'])
+   results = ldap_search(username, uid = username, attrs = ['userPassword'])
 
    assert len(results) < 2, "Expected only one object to match uid=%s, got %d objects." % (username, len(results))
 
@@ -95,5 +101,35 @@ def parse_dn(dn):
    fields = dn.split(",")
    return dict([field.split("=") for field in fields])
 
+def change_password(uid, oldpassword, password):
+   ldapclient = get_uid_ldap_client(uid)
 
+   if ldapclient:
+      old = {'userPassword': [str(oldpassword)]}
+      new = {'userPassword': [str(password)]}
+      ldif = ldap.modlist.modifyModlist(old, new)
 
+      state = ldapclient.modify_s("uid=%s,ou=people,O=TOG" % uid, ldif)
+      
+      return True
+   else:
+      return False
+
+def get_uid_ldap_client(uid, password = None):
+   global cached_ldap_clients
+   print "looking up ldap client for", uid, password
+   print cached_ldap_clients
+   if password:
+      # Create an LDAP connection object for this user.
+      ldapclient = get_ldap_client("uid=%s,ou=people,O=TOG" % uid, password)
+      
+      print "made new ldap connection", uid, password, ldapclient
+
+      # Cache this connection object so other requests can use it.
+      cached_ldap_clients[uid] = ldapclient
+   else:
+      # Look for a cached LDAP client object for this user.
+      try:
+         return cached_ldap_clients[uid]
+      except KeyError:
+         return None
